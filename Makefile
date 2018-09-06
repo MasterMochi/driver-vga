@@ -1,6 +1,6 @@
 #******************************************************************************#
 # Makefile                                                                     #
-#                                                                   2018/08/31 #
+#                                                                   2018/09/03 #
 # Copyright (C) 2018 Mochi.                                                    #
 #******************************************************************************#
 #******************************************************************************#
@@ -10,7 +10,9 @@
 PROG = driver-vga
 
 # ソースコード
-SRCS = main.c
+SRCS = main.c     \
+       TextCtrl.c \
+       Vram.c
 
 # ソースコードディレクトリ
 SRC_DIR = src
@@ -30,8 +32,11 @@ CFLAGS = -I../../kernel/src/include \
 # LDフラグ
 LDFLAGS = -Tdriver-vga.lds                    \
           -melf_i386                          \
-          -L../../kernel/build/objs/libraries \
-          -lMk
+          -L../../kernel/build/objs/libraries
+
+# ライブラリ
+LIBS = -lc  \
+       -lMk
 
 
 #******************************************************************************#
@@ -69,7 +74,7 @@ $(OBJ_SUBDIRS):
 endif
 
 $(OBJ_DIR)/$(PROG): $(OBJS) Makefile
-	$(LD) $(LDFLAGS) -o $@ $(OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c Makefile
 	$(CC) $(CFLAGS) -o $@ -c $< -MD -MP
