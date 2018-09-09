@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/Vram.c                                                                 */
-/*                                                                 2018/09/04 */
+/*                                                                 2018/09/09 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -8,7 +8,11 @@
 /******************************************************************************/
 /* 共通ヘッダ */
 #include <stdint.h>
+#include <string.h>
 #include <kernel/library.h>
+
+/* モジュール内ヘッダ */
+#include "vga.h"
 
 
 /******************************************************************************/
@@ -29,7 +33,9 @@ static uint8_t *pgVram = NULL;
 /******************************************************************************/
 void VramInit( void )
 {
-    uint32_t errNo; /* エラー番号 */
+    uint32_t errNo;     /* エラー番号 */
+    uint32_t row;       /* 行番号     */
+    uint32_t column;    /* 列番号     */
     
     /* 初期化 */
     errNo = MK_MSG_ERR_NONE;
@@ -44,6 +50,17 @@ void VramInit( void )
         /* [TODO]アボート */
     }
     
+    /* VRAM初期化 */
+    for ( row = 0; row < 25; row++ ) {
+        for ( column = 0; column < 80; column++ ) {
+            pgVram[ row * 80 + column * 2     ] = ' ';
+            pgVram[ row * 80 + column * 2 + 1 ] =
+                VGA_TEXT_ATTR_FG_WHITE  |   /* 白色文字属性 */
+                VGA_TEXT_ATTR_FG_BRIGHT |   /* 明色文字属性 */
+                VGA_TEXT_ATTR_BG_BLACK;     /* 黒色背景属性 */
+        }
+    }
+    
     return;
 }
 
@@ -51,26 +68,24 @@ void VramInit( void )
 /******************************************************************************/
 /**
  * @brief       VRAM書込み
- * @details     指定した行列に対応するVRAM領域に文字と属性を書き込む。
+ * @details     VRAMに書き込む。
  * 
- * @param[in]   row    行(1オリジン)
- * @param[in]   column 列(1オリジン)
- * @param[in]   c      文字
- * @param[in]   attr   属性
+ * @param[in]   *pBuffer データ
+ * @param[in]   size     データサイズ
  */
 /******************************************************************************/
-void VramWrite( uint32_t row,
-                uint32_t column,
-                uint8_t  c,
-                uint8_t  attr    )
+void VramWrite( uint8_t *pBuffer,
+                size_t  size      )
 {
-    /* オリジン変換 */
-    row    -= 1;
-    column -= 1;
+    /* サイズチェック */
+    if ( size > ( 25 * 80 * 2 ) ) {
+        /* 上限越え */
+        
+        size = 25 * 80 * 2;
+    }
     
-    /* 書込み */
-    pgVram[ row * 80 * 2 + column * 2     ] = c;
-    pgVram[ row * 80 * 2 + column * 2 + 1 ] = attr;
+    /* 書き込み */
+    memcpy( pgVram, pBuffer, size );
     
     return;
 }
