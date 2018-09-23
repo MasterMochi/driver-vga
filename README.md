@@ -1,2 +1,2 @@
-# driver-vga
+# drv-vga
 VGA driver on MochiKernel
