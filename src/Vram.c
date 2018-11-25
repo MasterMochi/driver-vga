@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/Vram.c                                                                 */
-/*                                                                 2018/09/12 */
+/*                                                                 2018/10/13 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,6 +12,7 @@
 #include <kernel/library.h>
 
 /* モジュール内ヘッダ */
+#include "drv-vga.h"
 #include "vga.h"
 
 
@@ -71,22 +72,27 @@ void VramInit( void )
  * @brief       VRAM書込み
  * @details     VRAMに書き込む。
  * 
- * @param[in]   *pBuffer データ
- * @param[in]   size     データサイズ
+ * @param[in]   *pMsg メッセージ
  */
 /******************************************************************************/
-void VramWrite( uint8_t *pBuffer,
-                size_t  size      )
+void VramWrite( DrvVgaMsgWrite_t *pMsg )
 {
-    /* サイズチェック */
-    if ( size > ( 25 * 80 * 2 ) ) {
+    /* インデックスチェック */
+    if ( pMsg->index >= ( 25 * 80 * 2 ) ) {
         /* 上限越え */
         
-        size = 25 * 80 * 2;
+        return;
+    }
+    
+    /* サイズチェック */
+    if ( ( pMsg->index + pMsg->size ) > ( 25 * 80 * 2 ) ) {
+        /* 上限越え */
+        
+        pMsg->size -= ( pMsg->index + pMsg->size ) - ( 25 * 80 * 2 );
     }
     
     /* 書き込み */
-    memcpy( pgVram, pBuffer, size );
+    memcpy( pgVram + pMsg->index, pMsg->data, pMsg->size );
     
     return;
 }

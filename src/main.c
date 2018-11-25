@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/main.c                                                                 */
-/*                                                                 2018/09/09 */
+/*                                                                 2018/10/13 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,6 +12,7 @@
 #include <kernel/library.h>
 
 /* モジュールヘッダ */
+#include "drv-vga.h"
 #include "Vram.h"
 
 
@@ -20,14 +21,16 @@
 /******************************************************************************/
 void main( void )
 {
-    char     buffer[ MK_MSG_SIZE_MAX + 1 ]; /* 受信メッセージバッファ */
-    int32_t  size;                          /* 受信メッセージサイズ   */
-    uint32_t errNo;                         /* エラー番号             */
+    char           buffer[ MK_MSG_SIZE_MAX + 1 ];   /* 受信メッセージバッファ */
+    int32_t        size;                            /* 受信メッセージサイズ   */
+    uint32_t       errNo;                           /* エラー番号             */
+    DrvVgaMsgHdr_t *pMsg;                           /* メッセージ             */
     
     /* 初期化 */
     memset( buffer, 0, sizeof ( buffer ) );
     size  = MK_MSG_RET_FAILURE;
     errNo = MK_MSG_ERR_NONE;
+    pMsg  = ( DrvVgaMsgHdr_t * ) buffer;
     
     /* VRAM初期化 */
     VramInit();
@@ -36,7 +39,7 @@ void main( void )
     while ( true ) {
         /* メッセージ受信 */
         size = MkMsgReceive( MK_CONFIG_TASKID_NULL,     /* タスクID           */
-                             buffer,                    /* メッセージバッファ */
+                             pMsg,                      /* メッセージバッファ */
                              MK_MSG_SIZE_MAX,           /* バッファサイズ     */
                              &errNo                 );  /* エラー番号         */
         
@@ -47,8 +50,11 @@ void main( void )
             continue;
         }
         
-        /* VRAM書き込み */
-        VramWrite( buffer, size );
+        /* 機能ID判定 */
+        if ( pMsg->funcId == DRVVGA_FUNC_WRITE ) {
+            /* VRAM書き込み */
+            VramWrite( ( DrvVgaMsgWrite_t * ) pMsg );
+        }
     }
 }
 /******************************************************************************/
