@@ -1,7 +1,7 @@
 #******************************************************************************#
-# Makefile                                                                     #
-#                                                                   2018/09/23 #
-# Copyright (C) 2018 Mochi.                                                    #
+# src/Makefile                                                                 #
+#                                                                   2019/01/31 #
+# Copyright (C) 2019 Mochi.                                                    #
 #******************************************************************************#
 #******************************************************************************#
 #* 定義                                                                       *#
@@ -13,25 +13,26 @@ PROG = drv-vga
 SRCS = main.c \
        Vram.c
 
-# ソースコードディレクトリ
-SRC_DIR = src
+# ビルドディレクトリ
+BUILD_DIR = ../build
 
-# オブジェクトファイル生成先
-OBJ_DIR = obj
+# オブジェクトファイル生成先ディレクトリ
+OBJ_DIR = $(BUILD_DIR)/obj
 
 # Cフラグ
-CFLAGS = -I../../kernel/src/include \
-         -ffreestanding             \
-         -nostdlib                  \
-         -m32                       \
-         -fno-pic                   \
-         -static                    \
-         -masm=intel
+CFLAGS = -ffreestanding         \
+         -nostdlib              \
+         -m32                   \
+         -fno-pic               \
+         -static                \
+         -masm=intel            \
+         -I$(BUILD_DIR)/include \
+         -Iinclude
 
 # LDフラグ
-LDFLAGS = -Tdrv-vga.lds                       \
-          -melf_i386                          \
-          -L../../kernel/build/objs/libraries
+LDFLAGS = -Tdrv-vga.lds      \
+          -melf_i386         \
+          -L$(BUILD_DIR)/lib
 
 # ライブラリ
 LIBS = -lc  \
@@ -55,27 +56,33 @@ DEPS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.d))
 #* phonyターゲット                                                            *#
 #******************************************************************************#
 .PHONY: all
-all: $(OBJ_SUBDIRS) $(OBJS) $(OBJ_DIR)/$(PROG) Makefile
+all: $(OBJ_SUBDIRS) $(BUILD_DIR)/$(PROG) Makefile
 
 .PHONY: clean
 clean:
+	-rm -rf $(BUILD_DIR)/$(PROG)
 	-rm -rf $(OBJ_DIR)
 
 
 #******************************************************************************#
 #* 生成規則                                                                   *#
 #******************************************************************************#
+# 依存関係ファイル
 -include $(DEPS)
 
+# サブディレクトリ生成
 ifdef OBJ_SUBDIRS
 $(OBJ_SUBDIRS):
 	mkdir -p $@
 endif
 
-$(OBJ_DIR)/$(PROG): $(OBJS) Makefile
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+# 実行ファイル生成
+$(BUILD_DIR)/$(PROG): $(OBJS) Makefile
+	$(LD) $(LDFLAGS) -o $(OBJ_DIR)/$(PROG) $(OBJS) $(LIBS)
+	ln -sfr $(OBJ_DIR)/$(PROG) $@
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c Makefile
+# コンパイル
+$(OBJ_DIR)/%.o: %.c Makefile
 	$(CC) $(CFLAGS) -o $@ -c $< -MD -MP
 
 

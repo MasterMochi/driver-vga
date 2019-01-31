@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/Vram.c                                                                 */
-/*                                                                 2018/10/13 */
-/* Copyright (C) 2018 Mochi.                                                  */
+/*                                                                 2019/01/31 */
+/* Copyright (C) 2018-2019 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -37,21 +37,21 @@ void VramInit( void )
     uint32_t errNo;     /* エラー番号 */
     uint32_t row;       /* 行番号     */
     uint32_t column;    /* 列番号     */
-    
+
     /* 初期化 */
     errNo = MK_MSG_ERR_NONE;
-    
+
     /* VRAM領域割当 */
     pgVram = MkIoMemAlloc( ( void * ) 0x000B8000, 0x00008000, &errNo );
-    
+
     /* 割当結果判定 */
     if ( pgVram == NULL ) {
         /* 失敗 */
-        
+
         /* [TODO]アボート */
         while( 1 );
     }
-    
+
     /* VRAM初期化 */
     for ( row = 0; row < 25; row++ ) {
         for ( column = 0; column < 80; column++ ) {
@@ -62,7 +62,7 @@ void VramInit( void )
                 VGA_TEXT_ATTR_BG_BLACK;     /* 黒色背景属性 */
         }
     }
-    
+
     return;
 }
 
@@ -71,7 +71,7 @@ void VramInit( void )
 /**
  * @brief       VRAM書込み
  * @details     VRAMに書き込む。
- * 
+ *
  * @param[in]   *pMsg メッセージ
  */
 /******************************************************************************/
@@ -80,20 +80,20 @@ void VramWrite( DrvVgaMsgWrite_t *pMsg )
     /* インデックスチェック */
     if ( pMsg->index >= ( 25 * 80 * 2 ) ) {
         /* 上限越え */
-        
+
         return;
     }
-    
+
     /* サイズチェック */
     if ( ( pMsg->index + pMsg->size ) > ( 25 * 80 * 2 ) ) {
         /* 上限越え */
-        
+
         pMsg->size -= ( pMsg->index + pMsg->size ) - ( 25 * 80 * 2 );
     }
-    
+
     /* 書き込み */
     memcpy( pgVram + pMsg->index, pMsg->data, pMsg->size );
-    
+
     return;
 }
 

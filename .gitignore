@@ -1,1 +1,3 @@
-obj/*
+build/obj
+build/drv-vga
+tags
